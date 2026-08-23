@@ -1,0 +1,52 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", pad="0.35", nodesep="0.35", ranksep="0.5", fontname="DejaVu Sans", label="CollabBoard — React Component Tree", labelloc="t", fontsize=26];
+  node [shape=box, style="rounded,filled", fillcolor="#F7F9FC", color="#B6C0D0", fontcolor="#233047", fontname="DejaVu Sans", fontsize=12, margin="0.18,0.10"];
+  edge [color="#94A0B4", arrowsize=0.7];
+
+  App [fillcolor="#EAF0FF", color="#6D86E9", fontsize=15];
+  Auth [label="Authentication Pages"];
+  AppLayout [label="AppLayout", fillcolor="#EAF0FF", color="#6D86E9"];
+  Login [label="LoginPage"];
+  Register [label="RegisterPage"];
+  Sidebar [label="Sidebar"];
+  Pages [label="Main Pages"];
+  Dashboard [label="DashboardPage"];
+  Boards [label="BoardsPage"];
+  BoardPage [label="BoardPage", fillcolor="#EAF0FF", color="#6D86E9"];
+  Tasks [label="MyTasksPage"];
+  Team [label="TeamPage"];
+  Settings [label="SettingsPage"];
+  Board [label="Board"];
+  Column [label="Column", fillcolor="#F0F5FF"];
+  TaskCard [label="TaskCard", fillcolor="#F0F5FF"];
+  TaskModal [label="TaskModal\n(Add / Edit)"];
+  DeleteModal [label="DeleteModal"];
+  Common [label="Common UI"];
+  Avatar [label="Avatar"];
+  Badge [label="Badge"];
+  Button [label="Button"];
+  Modal [label="Modal"];
+
+  App -> Auth;
+  App -> AppLayout;
+  Auth -> Login;
+  Auth -> Register;
+  AppLayout -> Sidebar;
+  AppLayout -> Pages;
+  Pages -> Dashboard;
+  Pages -> Boards;
+  Pages -> BoardPage;
+  Pages -> Tasks;
+  Pages -> Team;
+  Pages -> Settings;
+  BoardPage -> Board;
+  Board -> Column;
+  Column -> TaskCard;
+  BoardPage -> TaskModal;
+  BoardPage -> DeleteModal;
+  App -> Common [style=dashed];
+  Common -> Avatar;
+  Common -> Badge;
+  Common -> Button;
+  Common -> Modal;
+}
