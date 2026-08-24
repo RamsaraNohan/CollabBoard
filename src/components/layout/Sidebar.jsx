@@ -1,24 +1,41 @@
-import React from 'react'
-import Avatar from '../common/Avatar'
+import React from 'react';
+import Avatar from '../common/Avatar';
 
 const navItems = [
   { key: 'dashboard', label: 'Dashboard', icon: '⌂' },
   { key: 'boards', label: 'My Boards', icon: '▦' },
   { key: 'tasks', label: 'My Tasks', icon: '✓' },
   { key: 'team', label: 'Team', icon: '♙' },
-]
+];
 
 export default function Sidebar({ currentPage, navigate, projects, currentUser, collapsed, onToggle }) {
   return (
     <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
+      {/* Brand & Toggle Header */}
       <div className="brand-row">
-        <button className="logo-mark" onClick={() => navigate('dashboard')} aria-label="CollabBoard dashboard">
-          <span></span><span></span><span></span><span></span>
+        <button 
+          className="logo-mark" 
+          onClick={() => navigate('dashboard')} 
+          aria-label="CollabBoard dashboard"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
         </button>
-        {!collapsed && <button className="brand-text" onClick={() => navigate('dashboard')}>CollabBoard</button>}
-        <button className="sidebar-toggle" onClick={onToggle} aria-label="Toggle navigation">☰</button>
+        
+        {!collapsed && (
+          <button className="brand-text" onClick={() => navigate('dashboard')}>
+            CollabBoard
+          </button>
+        )}
+        
+        <button className="sidebar-toggle" onClick={onToggle} aria-label="Toggle navigation">
+          ☰
+        </button>
       </div>
 
+      {/* Main Navigation Links */}
       <nav className="sidebar-nav" aria-label="Primary navigation">
         {navItems.map((item) => (
           <button
@@ -32,9 +49,14 @@ export default function Sidebar({ currentPage, navigate, projects, currentUser, 
         ))}
       </nav>
 
+      {/* Projects List (Hidden when collapsed) */}
       {!collapsed && (
         <div className="project-section">
-          <div className="section-heading"><span>Projects</span><button aria-label="Add project">+</button></div>
+          <div className="section-heading">
+            <span>Projects</span>
+            <button aria-label="Add project">+</button>
+          </div>
+          
           {projects.map((project) => (
             <button key={project.id} className="project-link" onClick={() => navigate('board')}>
               <span className={`project-dot ${project.accent}`}></span>
@@ -44,11 +66,16 @@ export default function Sidebar({ currentPage, navigate, projects, currentUser, 
         </div>
       )}
 
+      {/* Footer Settings & Profile */}
       <div className="sidebar-footer">
-        <button className={`nav-item ${currentPage === 'settings' ? 'active' : ''}`} onClick={() => navigate('settings')}>
+        <button 
+          className={`nav-item ${currentPage === 'settings' ? 'active' : ''}`} 
+          onClick={() => navigate('settings')}
+        >
           <span className="nav-icon">⚙</span>
           {!collapsed && <span>Settings</span>}
         </button>
+        
         <button className="profile-chip" onClick={() => navigate('settings')}>
           <Avatar user={currentUser} size="sm" title={false} />
           {!collapsed && (
@@ -60,5 +87,5 @@ export default function Sidebar({ currentPage, navigate, projects, currentUser, 
         </button>
       </div>
     </aside>
-  )
+  );
 }
