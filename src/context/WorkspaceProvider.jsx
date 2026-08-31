@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useEffect, useMemo, useReducer } from 'react'
-import { mockRepository } from '../services/mockRepository'
 import { authService } from '../services/authService'
 import { projectService } from '../services/projectService'
 import { taskService } from '../services/taskService'
@@ -31,12 +30,21 @@ export default function WorkspaceProvider({ children }) {
 
   const refresh = useCallback(async () => {
     try {
-      const workspace = await mockRepository.read()
       let session = await authService.getSession()
-      if (session && !workspace.users.some((user) => user.id === session.userId)) {
+      if (!session) {
+        dispatch({ type: 'loaded', payload: { users: [], projects: [], tasks: [], session: null } })
+        return { users: [], projects: [], tasks: [] }
+      }
+      const [users, projects, tasks] = await Promise.all([
+        userService.getAll(),
+        projectService.getAll({ includeArchived: true }),
+        taskService.getAll(),
+      ])
+      if (!users.some((user) => user.id === session.userId)) {
         await authService.logout()
         session = null
       }
+      const workspace = { users, projects, tasks }
       dispatch({ type: 'loaded', payload: { ...workspace, session } })
       return workspace
     } catch (error) {
@@ -46,6 +54,12 @@ export default function WorkspaceProvider({ children }) {
   }, [])
 
   useEffect(() => { refresh() }, [refresh])
+
+  useEffect(() => {
+    const unauthorized = () => dispatch({ type: 'loaded', payload: { users: [], projects: [], tasks: [], session: null } })
+    window.addEventListener('collabboard:unauthorized', unauthorized)
+    return () => window.removeEventListener('collabboard:unauthorized', unauthorized)
+  }, [])
 
   const toast = useCallback((message, tone = 'success') => {
     const id = `${Date.now()}-${Math.random()}`

@@ -4,7 +4,7 @@ export const STORAGE_KEYS = {
   temporarySession: 'collabboard.session.temp.v1',
 }
 
-export const WORKSPACE_VERSION = 1
+export { WORKSPACE_VERSION } from '../../shared/domain.js'
 export const DEMO_PASSWORD = 'password'
 
 export const STATUSES = [
@@ -19,14 +19,4 @@ export const PRIORITIES = [
   { value: 'low', label: 'Low' },
 ]
 
-export const LABELS = [
-  'FRONTEND',
-  'BACKEND',
-  'DATABASE',
-  'DESIGN',
-  'TESTING',
-  'DEVOPS',
-  'DOCUMENTATION',
-]
-
-export const PROJECT_ACCENTS = ['blue', 'purple', 'teal', 'orange', 'slate']
+export { TASK_LABELS as LABELS, PROJECT_ACCENTS } from '../../shared/domain.js'

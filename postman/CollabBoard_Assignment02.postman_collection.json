@@ -1,0 +1,178 @@
+{
+  "info": {
+    "_postman_id": "a02c6b61-0000-4000-8000-000000000002",
+    "name": "CollabBoard Assignment 02 REST API",
+    "description": "Executable Assignment 02 collection for the JWT-protected in-memory CollabBoard API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "userId", "value": "u1" },
+    { "key": "projectId", "value": "" },
+    { "key": "taskId", "value": "" },
+    { "key": "registrationEmail", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "auth": { "type": "noauth" },
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/health" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('health is ok', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('ok'); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register development member",
+          "auth": { "type": "noauth" },
+          "event": [
+            { "listen": "prerequest", "script": { "exec": ["pm.collectionVariables.set('registrationEmail', `assignment02.${Date.now()}@example.com`);"] } },
+            { "listen": "test", "script": { "exec": ["pm.test('registration returns JWT', () => { pm.response.to.have.status(201); const body = pm.response.json(); pm.expect(body.token).to.be.a('string'); pm.expect(body.user.email).to.eql(pm.collectionVariables.get('registrationEmail')); });"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Assignment 02 Runner\",\n  \"email\": \"{{registrationEmail}}\",\n  \"password\": \"password123\"\n}" },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login seeded member",
+          "auth": { "type": "noauth" },
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"member1@example.com\",\n  \"password\": \"password\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('login returns JWT', () => { pm.response.to.have.status(200); const body = pm.response.json(); pm.expect(body.token).to.be.a('string'); pm.collectionVariables.set('token', body.token); pm.collectionVariables.set('userId', body.user.id); });"] } }]
+        },
+        {
+          "name": "Current member",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/auth/me" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('token restores identity', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('userId')); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List members",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/users" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('public roster is returned', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().length).to.be.at.least(5); });"] } }]
+        },
+        {
+          "name": "Read current member",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/users/{{userId}}" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('member is readable', () => pm.response.to.have.status(200));"] } }]
+        },
+        {
+          "name": "Update own profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"Frontend / Project Coordination\"\n}" },
+            "url": "{{baseUrl}}/users/{{userId}}"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('self profile updates', () => pm.response.to.have.status(200));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "List projects",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/projects?includeArchived=true" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('projects are listed', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"] } }]
+        },
+        {
+          "name": "Create project",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Assignment 02 Project\",\n  \"description\": \"Temporary collection-run fixture.\",\n  \"ownerId\": \"u1\",\n  \"memberIds\": [\"u1\", \"u2\"],\n  \"status\": \"active\",\n  \"priority\": \"high\",\n  \"accent\": \"teal\"\n}" },
+            "url": "{{baseUrl}}/projects"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('project is created', () => { pm.response.to.have.status(201); pm.collectionVariables.set('projectId', pm.response.json().id); });"] } }]
+        },
+        {
+          "name": "Read project",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/projects/{{projectId}}" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('project is readable', () => pm.response.to.have.status(200));"] } }]
+        },
+        {
+          "name": "Favorite project",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"isFavorite\": true }" },
+            "url": "{{baseUrl}}/projects/{{projectId}}"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('project patch succeeds', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().isFavorite).to.eql(true); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Create project task",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"title\": \"Postman REST verification\",\n  \"description\": \"Temporary task created by the Assignment 02 collection.\",\n  \"assigneeId\": \"u2\",\n  \"status\": \"todo\",\n  \"priority\": \"high\",\n  \"labels\": [\"BACKEND\", \"TESTING\"],\n  \"dueDate\": \"2026-09-30\"\n}" },
+            "url": "{{baseUrl}}/tasks"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('task is created', () => { pm.response.to.have.status(201); pm.collectionVariables.set('taskId', pm.response.json().id); });"] } }]
+        },
+        {
+          "name": "Filter project tasks",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/tasks?projectId={{projectId}}&priority=high&label=BACKEND" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('filters preserve project isolation', () => { pm.response.to.have.status(200); const items = pm.response.json(); pm.expect(items.length).to.eql(1); pm.expect(items[0].projectId).to.eql(pm.collectionVariables.get('projectId')); });"] } }]
+        },
+        {
+          "name": "Move task",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"status\": \"doing\" }" },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/status"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('task moves columns', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('doing'); });"] } }]
+        },
+        {
+          "name": "Edit task",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"title\": \"Postman REST verification updated\" }" },
+            "url": "{{baseUrl}}/tasks/{{taskId}}"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('task patch succeeds', () => pm.response.to.have.status(200));"] } }]
+        },
+        {
+          "name": "Delete task",
+          "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/tasks/{{taskId}}" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('task deletion returns no content', () => pm.response.to.have.status(204));"] } }]
+        },
+        {
+          "name": "Delete temporary project",
+          "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/projects/{{projectId}}" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('project deletion returns no content', () => pm.response.to.have.status(204));"] } }]
+        }
+      ]
+    }
+  ]
+}

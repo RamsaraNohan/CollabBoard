@@ -1,0 +1,35 @@
+{
+  "collection": "CollabBoard_Assignment02.postman_collection.json",
+  "executedAt": "2026-08-31",
+  "runner": "Newman",
+  "summary": {
+    "requests": 17,
+    "assertions": 17,
+    "failures": 0,
+    "status": "passed"
+  },
+  "requests": [
+    { "name": "Health check", "status": "passed" },
+    { "name": "Register development member", "status": "passed" },
+    { "name": "Login seeded member", "status": "passed" },
+    { "name": "Current member", "status": "passed" },
+    { "name": "List members", "status": "passed" },
+    { "name": "Read current member", "status": "passed" },
+    { "name": "Update own profile", "status": "passed" },
+    { "name": "List projects", "status": "passed" },
+    { "name": "Create project", "status": "passed" },
+    { "name": "Read project", "status": "passed" },
+    { "name": "Favorite project", "status": "passed" },
+    { "name": "Create project task", "status": "passed" },
+    { "name": "Filter project tasks", "status": "passed" },
+    { "name": "Move task", "status": "passed" },
+    { "name": "Edit task", "status": "passed" },
+    { "name": "Delete task", "status": "passed" },
+    { "name": "Delete temporary project", "status": "passed" }
+  ],
+  "security": {
+    "credentials": "redacted",
+    "tokens": "redacted",
+    "note": "The raw Newman execution output was reduced to this verification summary before commit."
+  }
+}

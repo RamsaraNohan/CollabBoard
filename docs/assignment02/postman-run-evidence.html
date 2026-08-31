@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CollabBoard Postman Collection Evidence</title>
+  <style>
+    body{margin:0;background:#f3f6fb;color:#14213d;font:15px/1.5 Arial,sans-serif}.wrap{max-width:1050px;margin:40px auto;padding:0 24px}.head{background:#fff;border:1px solid #dbe3ef;border-radius:18px;padding:28px;display:flex;justify-content:space-between;align-items:center}.head h1{margin:0;font-size:28px}.ok{background:#def7e9;color:#087443;padding:10px 16px;border-radius:999px;font-weight:700}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:18px 0}.stat,.panel{background:#fff;border:1px solid #dbe3ef;border-radius:16px;padding:20px}.stat strong{display:block;color:#3158ee;font-size:30px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel h2{margin:0 0 14px;font-size:18px}.row{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #edf1f7}.method{width:58px;font-size:12px;font-weight:700;color:#3158ee}.pass{margin-left:auto;color:#078650;font-weight:700}.foot{color:#68758b;margin-top:18px}
+  </style>
+</head>
+<body><main class="wrap">
+  <section class="head"><div><small>COLLABBOARD - ASSIGNMENT 02</small><h1>Postman Collection Run</h1><p>CollabBoard_Assignment02.postman_collection.json</p></div><span class="ok">ALL CHECKS PASSED</span></section>
+  <section class="stats"><div class="stat"><strong>17</strong>Requests executed</div><div class="stat"><strong>17</strong>Assertions passed</div><div class="stat"><strong>0</strong>Failures</div></section>
+  <section class="grid">
+    <div class="panel"><h2>Authentication and users</h2><div class="row"><span class="method">GET</span>/health<span class="pass">PASS</span></div><div class="row"><span class="method">POST</span>/auth/register<span class="pass">PASS</span></div><div class="row"><span class="method">POST</span>/auth/login<span class="pass">PASS</span></div><div class="row"><span class="method">GET</span>/auth/me<span class="pass">PASS</span></div><div class="row"><span class="method">GET</span>/users<span class="pass">PASS</span></div><div class="row"><span class="method">PATCH</span>/users/:id<span class="pass">PASS</span></div></div>
+    <div class="panel"><h2>Projects and tasks</h2><div class="row"><span class="method">POST</span>/projects<span class="pass">PASS</span></div><div class="row"><span class="method">PATCH</span>/projects/:id<span class="pass">PASS</span></div><div class="row"><span class="method">POST</span>/tasks<span class="pass">PASS</span></div><div class="row"><span class="method">GET</span>/tasks?filters<span class="pass">PASS</span></div><div class="row"><span class="method">PATCH</span>/tasks/:id/status<span class="pass">PASS</span></div><div class="row"><span class="method">DELETE</span>/tasks/:id and /projects/:id<span class="pass">PASS</span></div></div>
+  </section>
+  <p class="foot">Executed with Newman against the live in-memory Express server on 31 August 2026. Full machine-readable results are preserved in newman-results.json.</p>
+</main></body></html>

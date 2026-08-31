@@ -35,7 +35,7 @@ export default function ProjectModal({ open, project, users, currentUserId, onCl
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return
     setSaving(true)
-    try { await onSave(form) } finally { setSaving(false) }
+    try { await onSave(form) } catch { /* WorkspaceProvider already presents the API error. */ } finally { setSaving(false) }
   }
 
   return (
