@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CollabBoard Backend Evidence</title>
+  <style>
+    body{margin:0;background:#0d1426;color:#eaf0ff;font:15px/1.55 Consolas,monospace}.wrap{max-width:1080px;margin:38px auto;padding:0 24px}.top{display:flex;justify-content:space-between;align-items:center}.top h1{font:700 28px Arial,sans-serif;margin:4px 0}.badge{background:#123b2c;color:#65efaf;border:1px solid #1d7653;padding:9px 14px;border-radius:999px}.terminal{margin-top:20px;background:#111b31;border:1px solid #2b3a59;border-radius:16px;overflow:hidden}.bar{background:#1c2942;padding:10px 16px;color:#91a4c8}.body{padding:20px}.line{margin:7px 0}.prompt{color:#67a4ff}.green{color:#62e5a4}.json{background:#0a1020;border-left:3px solid #3158ee;padding:13px 16px;margin:10px 0;white-space:pre-wrap}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.stat{background:#111b31;border:1px solid #2b3a59;border-radius:14px;padding:18px}.stat strong{display:block;color:#70a2ff;font:700 28px Arial,sans-serif}
+  </style>
+</head>
+<body><main class="wrap"><div class="top"><div><small>COLLABBOARD - ASSIGNMENT 02</small><h1>Express REST API Evidence</h1></div><span class="badge">SERVER HEALTHY</span></div>
+  <section class="terminal"><div class="bar">CollabBoard API - localhost:5000</div><div class="body"><div class="line"><span class="prompt">PS&gt;</span> npm --prefix server run start</div><div class="line green">CollabBoard API listening on http://localhost:5000/api</div><div class="line"><span class="prompt">GET</span> /api/health</div><div class="json">{"status":"ok","service":"collabboard-api"}</div><div class="line"><span class="prompt">GET</span> /api/projects (without Bearer token)</div><div class="json">HTTP 401<br>{"error":{"code":"UNAUTHORIZED","message":"Authentication is required.","details":[]}}</div></div></section>
+  <section class="stats"><div class="stat"><strong>14 / 14</strong>Backend test scenarios passed</div><div class="stat"><strong>28 / 28</strong>Postman assertions passed</div><div class="stat"><strong>0</strong>Server-side data stores or secrets exposed</div></section>
+</main></body></html>

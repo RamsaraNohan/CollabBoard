@@ -1,0 +1,198 @@
+{
+  "info": {
+    "_postman_id": "a02c6b61-0000-4000-8000-000000000002",
+    "name": "CollabBoard Assignment 02 REST API",
+    "description": "Deterministic access-scoping verification for the JWT-protected in-memory CollabBoard API. Run from a clean server restart.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "ownerToken", "value": "" },
+    { "key": "userBToken", "value": "" },
+    { "key": "userBId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health and Setup",
+      "item": [
+        {
+          "name": "Health check",
+          "auth": { "type": "noauth" },
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/health" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('health is ok', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('ok'); });"] } }]
+        },
+        {
+          "name": "Register temporary User B",
+          "auth": { "type": "noauth" },
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Assignment 02 User B\",\n  \"email\": \"assignment02.userb@example.com\",\n  \"studentId\": \"49002\",\n  \"password\": \"password123\"\n}" },
+            "url": "{{baseUrl}}/auth/register"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('User B is registered', () => { pm.response.to.have.status(201); const body = pm.response.json(); pm.collectionVariables.set('userBToken', body.token); pm.collectionVariables.set('userBId', body.user.id); pm.collectionVariables.set('token', body.token); });"] } }]
+        },
+        {
+          "name": "User B starts with zero projects",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/projects" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('new user has no projects', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.eql([]); });"] } }]
+        },
+        {
+          "name": "User B starts with zero tasks",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/tasks" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('new user has no tasks', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.eql([]); });"] } }]
+        },
+        {
+          "name": "Login owner User A",
+          "auth": { "type": "noauth" },
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"member1@example.com\",\n  \"password\": \"password\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('owner login succeeds', () => { pm.response.to.have.status(200); const body = pm.response.json(); pm.collectionVariables.set('ownerToken', body.token); pm.collectionVariables.set('token', body.token); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Membership Conflict and Grant",
+      "item": [
+        {
+          "name": "Removing assigned seeded member returns 409",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"memberIds\": [\"u1\", \"u3\", \"u4\", \"u5\"] }" }, "url": "{{baseUrl}}/projects/p1" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('assigned member removal is blocked', () => { pm.response.to.have.status(409); pm.expect(pm.response.json().error.code).to.eql('PROJECT_MEMBER_HAS_TASKS'); });"] } }]
+        },
+        {
+          "name": "Unassign seeded task t2",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"assigneeId\": null }" }, "url": "{{baseUrl}}/tasks/t2" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('t2 is unassigned', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().assigneeId).to.eql(null); });"] } }]
+        },
+        {
+          "name": "Reassign seeded task t5",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"assigneeId\": \"u1\" }" }, "url": "{{baseUrl}}/tasks/t5" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('t5 is reassigned', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().assigneeId).to.eql('u1'); });"] } }]
+        },
+        {
+          "name": "Add User B and remove cleared member",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"memberIds\": [\"u1\", \"u3\", \"u4\", \"u5\", \"{{userBId}}\"] }" }, "url": "{{baseUrl}}/projects/p1" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('membership update succeeds after assignments are cleared', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().memberIds).to.include(pm.collectionVariables.get('userBId')); });"] } }]
+        },
+        {
+          "name": "Login User B after membership grant",
+          "auth": { "type": "noauth" },
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"email\": \"assignment02.userb@example.com\", \"password\": \"password123\" }" }, "url": "{{baseUrl}}/auth/login" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('User B login succeeds', () => { pm.response.to.have.status(200); const token = pm.response.json().token; pm.collectionVariables.set('userBToken', token); pm.collectionVariables.set('token', token); });"] } }]
+        },
+        {
+          "name": "User B sees only p1",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/projects" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('only shared project is visible', () => { pm.response.to.have.status(200); const ids = pm.response.json().map(project => project.id); pm.expect(ids).to.eql(['p1']); });"] } }]
+        },
+        {
+          "name": "User B sees p1 tasks",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/tasks?projectId=p1" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('shared project tasks are visible', () => { pm.response.to.have.status(200); const tasks = pm.response.json(); pm.expect(tasks.length).to.be.above(0); pm.expect(tasks.every(task => task.projectId === 'p1')).to.eql(true); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Non-Disclosure and Immutability",
+      "item": [
+        {
+          "name": "Inaccessible p2 project returns 404",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/projects/p2" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('project is non-disclosing', () => { pm.response.to.have.status(404); pm.expect(pm.response.json().error.code).to.eql('PROJECT_NOT_FOUND'); });"] } }]
+        },
+        {
+          "name": "Inaccessible p2 task returns 404",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/tasks/t12" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('task is non-disclosing', () => { pm.response.to.have.status(404); pm.expect(pm.response.json().error.code).to.eql('TASK_NOT_FOUND'); });"] } }]
+        },
+        {
+          "name": "Non-member task mutation returns 404",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"status\": \"done\" }" }, "url": "{{baseUrl}}/tasks/t12/status" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('non-member cannot mutate task', () => { pm.response.to.have.status(404); pm.expect(pm.response.json().error.code).to.eql('TASK_NOT_FOUND'); });"] } }]
+        },
+        {
+          "name": "Task project patch is rejected",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"projectId\": \"p2\" }" }, "url": "{{baseUrl}}/tasks/t1" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('task project is immutable', () => { pm.response.to.have.status(400); const error = pm.response.json().error; pm.expect(error.code).to.eql('IMMUTABLE_FIELD'); pm.expect(error.details).to.eql(['projectId']); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Revocation and Cleanup",
+      "item": [
+        {
+          "name": "Login owner for revocation",
+          "auth": { "type": "noauth" },
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"email\": \"member1@example.com\", \"password\": \"password\" }" }, "url": "{{baseUrl}}/auth/login" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('owner login succeeds', () => { pm.response.to.have.status(200); const token = pm.response.json().token; pm.collectionVariables.set('ownerToken', token); pm.collectionVariables.set('token', token); });"] } }]
+        },
+        {
+          "name": "Remove User B with no assigned tasks",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"memberIds\": [\"u1\", \"u3\", \"u4\", \"u5\"] }" }, "url": "{{baseUrl}}/projects/p1" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('User B removal succeeds', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().memberIds).not.to.include(pm.collectionVariables.get('userBId')); });"] } }]
+        },
+        {
+          "name": "Login removed User B",
+          "auth": { "type": "noauth" },
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"email\": \"assignment02.userb@example.com\", \"password\": \"password123\" }" }, "url": "{{baseUrl}}/auth/login" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('removed user account remains valid', () => { pm.response.to.have.status(200); const token = pm.response.json().token; pm.collectionVariables.set('userBToken', token); pm.collectionVariables.set('token', token); });"] } }]
+        },
+        {
+          "name": "Removed User B projects are empty",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/projects" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('project access is revoked', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.eql([]); });"] } }]
+        },
+        {
+          "name": "Removed User B tasks are empty",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/tasks" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('task access is revoked', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.eql([]); });"] } }]
+        },
+        {
+          "name": "Removed User B p1 read returns 404",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/projects/p1" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('revoked project is non-disclosing', () => pm.response.to.have.status(404));"] } }]
+        },
+        {
+          "name": "Removed User B t1 read returns 404",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/tasks/t1" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('revoked task is non-disclosing', () => pm.response.to.have.status(404));"] } }]
+        },
+        {
+          "name": "Removed User B remains in registered directory",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/users" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('directory still contains User B', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().some(user => user.id === pm.collectionVariables.get('userBId'))).to.eql(true); });"] } }]
+        },
+        {
+          "name": "Login owner for seed restoration",
+          "auth": { "type": "noauth" },
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"email\": \"member1@example.com\", \"password\": \"password\" }" }, "url": "{{baseUrl}}/auth/login" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('owner cleanup login succeeds', () => { pm.response.to.have.status(200); pm.collectionVariables.set('token', pm.response.json().token); });"] } }]
+        },
+        {
+          "name": "Restore seeded p1 membership",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"memberIds\": [\"u1\", \"u2\", \"u3\", \"u4\", \"u5\"] }" }, "url": "{{baseUrl}}/projects/p1" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('seed membership is restored', () => pm.response.to.have.status(200));"] } }]
+        },
+        {
+          "name": "Restore seeded t2 assignment",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"assigneeId\": \"u2\" }" }, "url": "{{baseUrl}}/tasks/t2" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('t2 assignment is restored', () => pm.response.to.have.status(200));"] } }]
+        },
+        {
+          "name": "Restore seeded t5 assignment",
+          "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"assigneeId\": \"u2\" }" }, "url": "{{baseUrl}}/tasks/t5" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('t5 assignment is restored', () => pm.response.to.have.status(200));"] } }]
+        }
+      ]
+    }
+  ]
+}

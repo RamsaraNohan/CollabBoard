@@ -1,7 +1,12 @@
 node_modules/
 dist/
+tmp/
 .env
 .env.*
+!.env.example
+!.env.mock
+!.env.test
+!server/.env.example
 .DS_Store
 .vscode/
 .idea/

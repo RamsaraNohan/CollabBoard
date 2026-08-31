@@ -1,91 +1,25 @@
-import React from 'react';
-import Avatar from '../common/Avatar';
+import React from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
+import Avatar from '../common/Avatar'
 
 const navItems = [
-  { key: 'dashboard', label: 'Dashboard', icon: '⌂' },
-  { key: 'boards', label: 'My Boards', icon: '▦' },
-  { key: 'tasks', label: 'My Tasks', icon: '✓' },
-  { key: 'team', label: 'Team', icon: '♙' },
-];
+  { to: '/dashboard', label: 'Dashboard', icon: '⌂' },
+  { to: '/projects', label: 'My Projects', icon: '▦' },
+  { to: '/my-tasks', label: 'My Tasks', icon: '✓' },
+  { to: '/team', label: 'Team', icon: '♙' },
+]
 
-export default function Sidebar({ currentPage, navigate, projects, currentUser, collapsed, onToggle }) {
-  return (
-    <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
-      {/* Brand & Toggle Header */}
-      <div className="brand-row">
-        <button 
-          className="logo-mark" 
-          onClick={() => navigate('dashboard')} 
-          aria-label="CollabBoard dashboard"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        
-        {!collapsed && (
-          <button className="brand-text" onClick={() => navigate('dashboard')}>
-            CollabBoard
-          </button>
-        )}
-        
-        <button className="sidebar-toggle" onClick={onToggle} aria-label="Toggle navigation">
-          ☰
-        </button>
-      </div>
-
-      {/* Main Navigation Links */}
-      <nav className="sidebar-nav" aria-label="Primary navigation">
-        {navItems.map((item) => (
-          <button
-            key={item.key}
-            className={`nav-item ${currentPage === item.key || (item.key === 'boards' && currentPage === 'board') ? 'active' : ''}`}
-            onClick={() => navigate(item.key)}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            {!collapsed && <span>{item.label}</span>}
-          </button>
-        ))}
-      </nav>
-
-      {/* Projects List (Hidden when collapsed) */}
-      {!collapsed && (
-        <div className="project-section">
-          <div className="section-heading">
-            <span>Projects</span>
-            <button aria-label="Add project">+</button>
-          </div>
-          
-          {projects.map((project) => (
-            <button key={project.id} className="project-link" onClick={() => navigate('board')}>
-              <span className={`project-dot ${project.accent}`}></span>
-              {project.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Footer Settings & Profile */}
-      <div className="sidebar-footer">
-        <button 
-          className={`nav-item ${currentPage === 'settings' ? 'active' : ''}`} 
-          onClick={() => navigate('settings')}
-        >
-          <span className="nav-icon">⚙</span>
-          {!collapsed && <span>Settings</span>}
-        </button>
-        
-        <button className="profile-chip" onClick={() => navigate('settings')}>
-          <Avatar user={currentUser} size="sm" title={false} />
-          {!collapsed && (
-            <span className="profile-copy">
-              <strong>{currentUser.name}</strong>
-              <small>{currentUser.role}</small>
-            </span>
-          )}
-        </button>
-      </div>
+export default function Sidebar({ projects, currentUser, collapsed, mobileOpen, onToggle, onCloseMobile, onCreateProject }) {
+  const location = useLocation()
+  const activeProjectId = location.pathname.match(/^\/projects\/([^/]+)/)?.[1]
+  const close = () => onCloseMobile?.()
+  return <>
+    {mobileOpen && <button className="sidebar-scrim" aria-label="Close navigation" onClick={close}></button>}
+    <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+      <div className="brand-row"><NavLink className="logo-mark" to="/dashboard" aria-label="CollabBoard dashboard" onClick={close}><span></span><span></span><span></span><span></span></NavLink>{!collapsed && <NavLink className="brand-text" to="/dashboard" onClick={close}>CollabBoard</NavLink>}<button className="sidebar-toggle" onClick={onToggle} aria-label="Toggle navigation">☰</button><button className="sidebar-mobile-close icon-button" onClick={close} aria-label="Close navigation">×</button></div>
+      <nav className="sidebar-nav" aria-label="Primary navigation">{navItems.map((item) => <NavLink key={item.to} to={item.to} onClick={close} className={({ isActive }) => `nav-item ${isActive || (item.to === '/projects' && activeProjectId) ? 'active' : ''}`}><span className="nav-icon">{item.icon}</span>{!collapsed && <span>{item.label}</span>}</NavLink>)}</nav>
+      {!collapsed && <div className="project-section"><div className="section-heading"><span>Projects</span><button aria-label="Create project" onClick={() => { onCreateProject(); close() }}>+</button></div>{projects.map((project) => <NavLink key={project.id} className={`project-link ${activeProjectId === project.id ? 'active' : ''}`} to={`/projects/${project.id}/board`} onClick={close}><span className={`project-dot ${project.accent}`}></span>{project.name}</NavLink>)}</div>}
+      <div className="sidebar-footer"><NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/settings" onClick={close}><span className="nav-icon">⚙</span>{!collapsed && <span>Settings</span>}</NavLink><NavLink className="profile-chip" to="/settings" onClick={close}><Avatar user={currentUser} size="sm" title={false} />{!collapsed && <span className="profile-copy"><strong>{currentUser?.name}</strong><small>{currentUser?.role}</small></span>}</NavLink></div>
     </aside>
-  );
+  </>
 }

@@ -1,7 +1,7 @@
 import React from 'react'
 import TaskCard from './TaskCard'
 
-export default function Column({ status, title, tasks, users, onEdit, onDelete, onMove, onAdd }) {
+export default function Column({ status, title, tasks, users, onOpen, onEdit, onDelete, onMove, onAdd }) {
   return (
     <section className={`kanban-column column-${status}`}>
       <div className="column-header">
@@ -16,8 +16,9 @@ export default function Column({ status, title, tasks, users, onEdit, onDelete, 
         {tasks.map((task) => (
           <TaskCard
             key={task.id}
-            task={task}
-            user={users.find((user) => user.id === task.assigneeId)}
+             task={task}
+             user={users.find((user) => user.id === task.assigneeId)}
+             onOpen={onOpen}
             onEdit={onEdit}
             onDelete={onDelete}
             onMove={onMove}
