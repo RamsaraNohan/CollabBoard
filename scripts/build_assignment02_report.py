@@ -14,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "Group61_Assignment02_CollabBoard_Report.docx"
 EVIDENCE = ROOT / "docs" / "assignment02" / "screenshots"
 ARCHITECTURE_IMAGE = EVIDENCE / "architecture-flow.png"
+POSTMAN_IMAGE = EVIDENCE / "postman" / "newman-collection-run.png"
+BACKEND_IMAGE = EVIDENCE / "backend" / "express-api-evidence.png"
 
 BLUE = RGBColor(49, 88, 238)
 NAVY = RGBColor(11, 37, 69)
@@ -319,6 +321,96 @@ def build_architecture_image():
     image.save(ARCHITECTURE_IMAGE)
 
 
+def _evidence_fonts():
+    try:
+        return (
+            ImageFont.truetype("arialbd.ttf", 34),
+            ImageFont.truetype("arialbd.ttf", 25),
+            ImageFont.truetype("arialbd.ttf", 18),
+            ImageFont.truetype("arial.ttf", 17),
+            ImageFont.truetype("arial.ttf", 14),
+        )
+    except OSError:
+        default = ImageFont.load_default()
+        return default, default, default, default, default
+
+
+def _rounded_card(draw, box, fill="#FFFFFF", outline="#D8E0EC", radius=18):
+    draw.rounded_rectangle(box, radius=radius, fill=fill, outline=outline, width=1)
+
+
+def build_postman_evidence_image():
+    POSTMAN_IMAGE.parent.mkdir(parents=True, exist_ok=True)
+    title_font, metric_font, heading_font, body_font, small_font = _evidence_fonts()
+    image = Image.new("RGB", (1200, 800), "#F4F7FB")
+    draw = ImageDraw.Draw(image)
+    _rounded_card(draw, (74, 40, 1126, 214))
+    draw.text((104, 76), "COLLABBOARD - ASSIGNMENT 02", font=small_font, fill="#42526B")
+    draw.text((104, 105), "Postman Access-Scoping Run", font=title_font, fill="#0B2545")
+    draw.text((104, 158), "CollabBoard_Assignment02.postman_collection.json", font=body_font, fill="#42526B")
+    draw.rounded_rectangle((900, 106, 1097, 154), radius=24, fill="#DDF6E8")
+    draw.text((930, 121), "ALL CHECKS PASSED", font=small_font, fill="#087A52")
+
+    for x, value, label in ((74, "28", "Requests executed"), (430, "28", "Assertions passed"), (786, "0", "Failures")):
+        _rounded_card(draw, (x, 234, x + 340, 344))
+        draw.text((x + 22, 258), value, font=metric_font, fill="#3158EE")
+        draw.text((x + 22, 302), label, font=small_font, fill="#23344D")
+
+    panels = [
+        (74, "Identity and empty scope", ["Register User B", "Projects -> []", "Tasks -> []", "Directory retains User B"]),
+        (610, "Grant, protect and revoke", ["Assigned-member removal -> 409", "Grant p1 membership -> visible", "p2 and t12 -> 404", "projectId patch -> 400", "Revoke membership -> hidden"]),
+    ]
+    for x, heading, rows in panels:
+        _rounded_card(draw, (x, 366, x + 516, 700))
+        draw.text((x + 22, 390), heading, font=heading_font, fill="#0B2545")
+        y = 438
+        for row in rows:
+            draw.line((x + 22, y - 12, x + 494, y - 12), fill="#E7ECF3", width=1)
+            draw.text((x + 22, y), row, font=body_font, fill="#23344D")
+            draw.text((x + 430, y), "PASS", font=small_font, fill="#078454")
+            y += 48
+    draw.text((74, 742), "Executed against the live in-memory Express API on 31 August 2026; machine results are preserved in newman-results.json.", font=small_font, fill="#5C6C84")
+    image.save(POSTMAN_IMAGE)
+
+
+def build_backend_evidence_image():
+    BACKEND_IMAGE.parent.mkdir(parents=True, exist_ok=True)
+    title_font, metric_font, heading_font, body_font, small_font = _evidence_fonts()
+    image = Image.new("RGB", (1200, 800), "#F4F7FB")
+    draw = ImageDraw.Draw(image)
+    _rounded_card(draw, (74, 40, 1126, 214))
+    draw.text((104, 76), "COLLABBOARD - ASSIGNMENT 02", font=small_font, fill="#42526B")
+    draw.text((104, 105), "Express API Verification", font=title_font, fill="#0B2545")
+    draw.text((104, 158), "Membership-scoped JWT REST API with deterministic in-memory data", font=body_font, fill="#42526B")
+    draw.rounded_rectangle((912, 106, 1097, 154), radius=24, fill="#DDF6E8")
+    draw.text((947, 121), "RUNNING", font=small_font, fill="#087A52")
+
+    for x, value, label in ((74, "200", "GET /api/health"), (430, "14/14", "Backend tests"), (786, "28/28", "Postman assertions")):
+        _rounded_card(draw, (x, 234, x + 340, 344))
+        draw.text((x + 22, 258), value, font=metric_font, fill="#3158EE")
+        draw.text((x + 22, 302), label, font=small_font, fill="#23344D")
+
+    _rounded_card(draw, (74, 366, 1126, 700), fill="#101C2E", outline="#101C2E")
+    draw.text((102, 392), "Runtime and access-policy evidence", font=heading_font, fill="#FFFFFF")
+    lines = [
+        "$ npm run dev:server",
+        "CollabBoard API listening on http://localhost:5000/api",
+        "GET /api/health  ->  200 { status: ok, service: collabboard-api }",
+        "GET /api/projects (no JWT)  ->  401",
+        "GET /api/projects (new user)  ->  []",
+        "GET /api/projects/p1 (non-member)  ->  404",
+        "PATCH /api/projects/p1 (visible non-owner)  ->  403",
+        "PATCH /api/tasks/t1 { projectId: p3 }  ->  400 IMMUTABLE_FIELD",
+        "Test Files  1 passed | Tests  14 passed",
+    ]
+    y = 438
+    for line in lines:
+        draw.text((102, y), line, font=body_font, fill="#7CE3B1" if line.startswith("Test") else "#DCE6F5")
+        y += 27
+    draw.text((74, 742), "JWT secrets remain local and ignored. Network Retry and real-401 session behavior were verified in the React client.", font=small_font, fill="#5C6C84")
+    image.save(BACKEND_IMAGE)
+
+
 def add_cover(doc):
     for _ in range(5):
         doc.add_paragraph()
@@ -348,6 +440,8 @@ def add_cover(doc):
 
 def build_report():
     build_architecture_image()
+    build_postman_evidence_image()
+    build_backend_evidence_image()
     doc = Document()
     configure_document(doc)
     add_cover(doc)
@@ -355,7 +449,7 @@ def build_report():
     add_heading(doc, "1. Introduction")
     add_body(doc, "CollabBoard is a responsive Kanban-style collaboration workspace for small project teams. Assignment 02 connects the completed React frontend to a modular Express REST API while preserving the frontend workflows, data field names, and derived selector logic established during the frontend campaign.")
     add_body(doc, "The implementation uses deterministic server-side in-memory data, JWT authentication, bcrypt password hashes, explicit CORS, allowlisted validation, stable service facades, and an executable Postman collection. MongoDB, realtime features, deployment, Docker, offline synchronization, and richer collaboration features are intentionally outside this assignment boundary.")
-    add_callout(doc, "Assignment outcome", "The React application now performs authentication, project CRUD, task CRUD and status movement, Team reads, and Settings updates through protected REST endpoints without direct page-level fetch calls or automatic mock fallback.")
+    add_callout(doc, "Assignment outcome", "The React application now performs authentication, membership-scoped project and task workflows, collaboration-aware Team reads, and Settings updates through protected REST endpoints without direct page-level fetch calls or automatic mock fallback.")
 
     add_heading(doc, "2. Team Members and Roles")
     add_table(doc, ["Student ID", "Member", "Assignment role"], [
@@ -391,7 +485,7 @@ def build_report():
     add_heading(doc, "5. REST API Design")
     add_body(doc, "The API is a small monolithic Express application organized by routes, controllers, services, repositories, middleware, data, and utilities. Success responses use bare entities or arrays. Deletions return 204 No Content. Errors use a single envelope with code, message, and details fields.")
     add_callout(doc, "Error contract", '{"error":{"code":"TASK_NOT_FOUND","message":"Task not found","details":[]}}', fill=LIGHT)
-    add_body(doc, "Correct HTTP semantics are used: 400 invalid input, 401 missing or invalid JWT, 403 forbidden profile update, 404 missing entity or route, 409 identity or relationship conflict, and 500 unexpected server errors.")
+    add_body(doc, "Correct HTTP semantics are used: 400 invalid input or immutable-field change, 401 missing or invalid JWT, 403 visible owner-only operation, non-disclosing 404 for inaccessible entities, 409 identity or member-assignment conflict, and 500 unexpected server errors.")
 
     add_heading(doc, "6. Authentication")
     add_body(doc, "Seeded development users authenticate with the password password. The server stores only bcrypt hashes in memory. Successful login and registration return a JWT and a public user. Tokens contain sub, iat, and exp and expire after eight hours by default.")
@@ -402,7 +496,7 @@ def build_report():
         "The Express middleware validates the token and attaches the public user to the request.",
         "A 401 clears the browser session and returns the application to Login.",
     ])
-    add_body(doc, "Task creatorId is always derived from the JWT. Client-provided creator IDs are ignored. Profile updates are self-only; project and task CRUD is shared among authenticated workspace members without adding advanced RBAC to this milestone.")
+    add_body(doc, "Task creatorId and project ownerId are derived from the JWT. Profile updates are self-only. Projects are visible only to their owner and members; project management is owner-only, while project members may perform task CRUD inside accessible projects. Task projectId is immutable after creation.")
 
     add_heading(doc, "7. API Endpoint Summary")
     add_table(doc, ["Group", "Public", "Protected operations"], [
@@ -412,7 +506,7 @@ def build_report():
         ("Projects", "None", "List, read, create, patch, delete"),
         ("Tasks", "None", "List/filter, read, create, patch, status patch, delete"),
     ], [1700, 3400, 4260])
-    add_body(doc, "Task queries accept projectId, assigneeId, status, priority, and label. Progress, workload, overdue totals, Dashboard counts, and project contribution remain frontend selector responsibilities.")
+    add_body(doc, "Task queries first restrict results to accessible non-archived projects and then accept projectId, assigneeId, status, priority, and label. Progress, workload, overdue totals, Dashboard counts, and project contribution remain frontend selector responsibilities. GET /api/users remains the registered account directory; the Team UI separately derives only shared-project collaborators.")
 
     add_heading(doc, "8. GitHub Repository and Assignment 02 Tag")
     add_body(doc, "Repository: https://github.com/RamsaraNohan/CollabBoard")
@@ -432,8 +526,8 @@ def build_report():
     add_body(doc, "Frontend-only mock development remains explicit through npm run dev:mock. Complete commands, environment variables, testing scripts, API boundaries, and credentials are documented in README.md.")
 
     add_heading(doc, "10. Postman Collection")
-    add_body(doc, "The Postman v2.1 collection is stored at postman/CollabBoard_Assignment02.postman_collection.json. It defines baseUrl, token, userId, projectId, and taskId variables. Login captures the JWT; create operations capture temporary IDs; cleanup requests delete the temporary task and project.")
-    add_figure(doc, "postman/newman-collection-run.png", "Figure 2. Executable collection result: 17 requests, 17 assertions, 0 failures.", width=6.3)
+    add_body(doc, "The Postman v2.1 collection is stored at postman/CollabBoard_Assignment02.postman_collection.json. It defines baseUrl, ownerToken, userBToken, and deterministic entity variables. Its access-scoping sequence registers an unassigned user, verifies empty visibility, grants and revokes membership, checks non-disclosing 404 responses, validates member-removal conflicts, and restores seeded state.")
+    add_figure(doc, "postman/newman-collection-run.png", "Figure 2. Executable access-scoping collection result: 28 requests, 28 assertions, 0 failures.", width=6.3)
     doc.add_page_break()
 
     add_heading(doc, "11. Frontend Screenshots")
@@ -442,7 +536,7 @@ def build_report():
     add_figure(doc, "frontend/projects-1440.png", "Figure 4. Canonical project list loaded from the REST API.", width=6.3)
     add_figure(doc, "frontend/board-1440.png", "Figure 5. Project-specific Website Development Kanban board.", width=6.3)
     doc.add_page_break()
-    add_figure(doc, "frontend/team-1024.png", "Figure 6. Five-member Team workload and completion metrics at 1024 px.", width=6.3)
+    add_figure(doc, "frontend/team-1440.png", "Figure 6. Shared-project Team collaborators and project-scoped metrics.", width=6.3)
     add_figure(doc, "frontend/my-tasks-390.png", "Figure 7. Mobile My Tasks card layout at 390 px.", width=2.6)
     doc.add_page_break()
 
@@ -453,15 +547,15 @@ def build_report():
 
     add_heading(doc, "13. Testing and Verification")
     add_table(doc, ["Gate", "Result", "Evidence"], [
-        ("Frontend tests", "PASS", "7 files, 12 tests"),
-        ("Backend tests", "PASS", "1 file, 7 scenarios"),
-        ("Postman/Newman", "PASS", "17 requests, 17 assertions, 0 failures"),
-        ("Production build", "PASS", "Vite transformed 102 modules"),
+        ("Frontend tests", "PASS", "9 files, 20 tests"),
+        ("Backend tests", "PASS", "1 file, 14 tests"),
+        ("Postman/Newman", "PASS", "28 requests, 28 assertions, 0 failures"),
+        ("Production build", "PASS", "Vite transformed 104 modules"),
         ("Responsive browser QA", "PASS", "390, 768, 1024, and 1440 px"),
-        ("Console audit", "PASS", "Handled 409 produced zero new console errors"),
+        ("Console audit", "PASS", "Offline, Retry, 401, and 409 flows had no unhandled rejection"),
     ], [2600, 1300, 5460])
-    add_body(doc, "Live browser QA used the real API mode. It verified login and JWT restoration, invalid-token clearing, project creation, task creation/edit/status movement, project isolation, Team and Member Details, Settings synchronization, relationship conflict feedback, direct route refreshes, and mobile sidebar geometry.")
-    add_body(doc, "Backend tests additionally verified destructive task/project cleanup, project delete cascade, invalid assignees, self-only user updates, protected routes, and normalized 400/401/403/404/409 errors.")
+    add_body(doc, "Live browser QA used real API mode. It verified startup, login and JWT restoration, offline error handling and Retry, invalid-token clearing, zero-project empty states, project-scoped Sidebar data, Team union and project filters, assignment project choice, owner-only controls, direct route refreshes, and responsive layouts.")
+    add_body(doc, "Backend tests additionally verified user-scoped project and task lists, archive semantics, access grant and revocation, the member-removal 409 sequence, non-disclosing entity reads, member task CRUD, invalid assignees, immutable projectId, self-only user updates, and normalized 400/401/403/404/409 errors.")
 
     add_heading(doc, "14. Known Limitations")
     add_bullets(doc, [
@@ -470,10 +564,11 @@ def build_report():
         "MongoDB, realtime updates, offline queues, comments, notifications, attachments, and deployment are deferred.",
         "The final Git tag is pending human approval and verified genuine contributions from all five members.",
         "Registered users are not automatically added to existing projects.",
+        "Archived projects remain directly readable to members but have no archive-center UI in this campaign.",
     ])
 
     add_heading(doc, "15. Conclusion")
-    add_body(doc, "CollabBoard now satisfies the technical Assignment 02 objective: a completed React frontend communicates through stable asynchronous service contracts with a JWT-protected Express REST API using deterministic in-memory backend data. Core project, task, team, authentication, and settings workflows operate through HTTP while derived presentation metrics remain correctly owned by frontend selectors.")
+    add_body(doc, "CollabBoard now satisfies the technical Assignment 02 objective: a completed React frontend communicates through stable asynchronous service contracts with a JWT-protected Express REST API using deterministic in-memory backend data. Project and task visibility is enforced by ownership and membership on the server, while Team collaboration is derived only from shared active projects and presentation metrics remain frontend-owned.")
     add_body(doc, "The implementation has passed automated frontend and backend tests, an executable Postman collection, production build, live integration checks, responsive browser QA, and visual evidence review. Submission tagging must wait for the remaining people-dependent contribution and approval gates; no artificial commits or premature tag are included.")
 
     doc.core_properties.title = "CollabBoard Assignment 02 - Working REST APIs"

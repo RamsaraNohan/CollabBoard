@@ -7,8 +7,9 @@ import { validateTask } from '../../utils/validation'
 const blankTask = ({ projectId, status, assigneeId }) => ({
   title: '', description: '', projectId: projectId || '', status: status || 'todo', priority: 'medium', assigneeId: assigneeId || '', dueDate: daysFromToday(7), labels: [],
 })
+const EMPTY_DEFAULTS = {}
 
-export default function TaskForm({ task, defaults = {}, projects, users, onCancel, onSave }) {
+export default function TaskForm({ task, defaults = EMPTY_DEFAULTS, projects, users, onCancel, onSave }) {
   const initial = useMemo(() => task || blankTask(defaults), [task, defaults])
   const [form, setForm] = useState(initial)
   const [errors, setErrors] = useState({})
@@ -48,7 +49,7 @@ export default function TaskForm({ task, defaults = {}, projects, users, onCance
     <form className="task-form" onSubmit={submit}>
       <label className="field full"><span>Task title <b>*</b></span><input value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="e.g. Build Login UI" />{errors.title && <small className="field-error">{errors.title}</small>}</label>
       <label className="field full"><span>Description <b>*</b></span><textarea value={form.description} onChange={(event) => update('description', event.target.value)} rows="4" placeholder="Describe the task and expected outcome." />{errors.description && <small className="field-error">{errors.description}</small>}</label>
-      <label className="field"><span>Project <b>*</b></span><select value={form.projectId} onChange={(event) => updateProject(event.target.value)}><option value="">Select project</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select>{errors.projectId && <small className="field-error">{errors.projectId}</small>}</label>
+      <label className="field"><span>Project <b>*</b></span>{task ? <input value={projects.find((project) => project.id === form.projectId)?.name || 'Unavailable project'} readOnly aria-readonly="true" /> : <select value={form.projectId} onChange={(event) => updateProject(event.target.value)}><option value="">Select project</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select>}{errors.projectId && <small className="field-error">{errors.projectId}</small>}</label>
       <label className="field"><span>Status</span><select value={form.status} onChange={(event) => update('status', event.target.value)}>{STATUSES.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}</select></label>
       <label className="field"><span>Priority</span><select value={form.priority} onChange={(event) => update('priority', event.target.value)}>{PRIORITIES.map((priority) => <option key={priority.value} value={priority.value}>{priority.label}</option>)}</select></label>
       <label className="field"><span>Assignee</span><select value={form.assigneeId} onChange={(event) => update('assigneeId', event.target.value)}><option value="">Unassigned</option>{eligibleUsers.map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}</select></label>

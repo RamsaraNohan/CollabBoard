@@ -97,7 +97,6 @@ export default function WorkspaceProvider({ children }) {
     logout: async () => { await authService.logout(); dispatch({ type: 'session', session: null }) },
     createProject: (data) => mutate(() => projectService.create(data), 'Project created.'),
     updateProject: (id, data) => mutate(() => projectService.update(id, data), 'Project updated.'),
-    toggleFavorite: (id) => mutate(() => projectService.toggleFavorite(id), 'Favorite updated.'),
     archiveProject: (id) => mutate(() => projectService.archive(id), 'Project archived.'),
     deleteProject: (id) => mutate(() => projectService.delete(id), 'Project deleted.'),
     createTask: (data) => mutate(() => taskService.create(data), 'Task created.'),

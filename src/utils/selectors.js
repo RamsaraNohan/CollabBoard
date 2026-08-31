@@ -5,6 +5,24 @@ export const getProjectById = (projects, id) => projects.find((project) => proje
 export const getTaskById = (tasks, id) => tasks.find((task) => task.id === id)
 export const getProjectTasks = (tasks, projectId) => tasks.filter((task) => task.projectId === projectId)
 export const getUserTasks = (tasks, userId) => tasks.filter((task) => task.assigneeId === userId)
+export const getActiveProjects = (projects) => projects.filter((project) => !project.archived)
+
+export function getSharedProjects(projects, currentUserId, memberId) {
+  return getActiveProjects(projects).filter((project) => project.memberIds.includes(currentUserId) && project.memberIds.includes(memberId))
+}
+
+export function getCollaborators(users, projects, currentUserId, projectId = 'all') {
+  const scopedProjects = getActiveProjects(projects).filter((project) => (
+    project.memberIds.includes(currentUserId) && (projectId === 'all' || project.id === projectId)
+  ))
+  const collaboratorIds = new Set(scopedProjects.flatMap((project) => project.memberIds).filter((id) => id !== currentUserId))
+  return users.filter((user) => collaboratorIds.has(user.id))
+}
+
+export function getTasksForProjects(tasks, projects) {
+  const projectIds = new Set(projects.map((project) => project.id))
+  return tasks.filter((task) => projectIds.has(task.projectId))
+}
 
 export function getTaskCounts(tasks, today = new Date()) {
   return {

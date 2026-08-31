@@ -9,7 +9,6 @@ export const projectService = {
   async getById(id) { return adapter.getById(id) },
   async create(data) { return adapter.create(data) },
   async update(id, changes) { return adapter.update(id, changes) },
-  async toggleFavorite(id) { return adapter.toggleFavorite(id) },
   async archive(id) { return adapter.archive(id) },
   async delete(id) { return adapter.delete(id) },
 }

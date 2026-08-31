@@ -18,6 +18,12 @@ export class WorkspaceRepository {
   getAuthRecord(userId) { return this.store.authRecords.get(userId) || null }
 
   listProjects({ includeArchived = false } = {}) { return clone(this.store.projects.filter((item) => includeArchived || !item.archived)) }
+  listProjectsForUser(userId, { includeArchived = false } = {}) {
+    return clone(this.store.projects.filter((item) => (
+      (item.ownerId === userId || item.memberIds.includes(userId))
+      && (includeArchived || !item.archived)
+    )))
+  }
   findProject(id) { return clone(this.store.projects.find((item) => item.id === id) || null) }
   createProject(project) { this.store.projects.push(clone(project)); return clone(project) }
   updateProject(id, changes) { const index = this.store.projects.findIndex((item) => item.id === id); if (index < 0) return null; this.store.projects[index] = { ...this.store.projects[index], ...clone(changes), id }; return clone(this.store.projects[index]) }
@@ -31,6 +37,10 @@ export class WorkspaceRepository {
     if (filters.label && !task.labels.includes(filters.label)) return false
     return true
   })) }
+  listTasksForProjects(projectIds, filters = {}) {
+    const allowed = new Set(projectIds)
+    return this.listTasks(filters).filter((task) => allowed.has(task.projectId))
+  }
   findTask(id) { return clone(this.store.tasks.find((item) => item.id === id) || null) }
   createTask(task) { this.store.tasks.push(clone(task)); return clone(task) }
   updateTask(id, changes) { const index = this.store.tasks.findIndex((item) => item.id === id); if (index < 0) return null; this.store.tasks[index] = { ...this.store.tasks[index], ...clone(changes), id }; return clone(this.store.tasks[index]) }

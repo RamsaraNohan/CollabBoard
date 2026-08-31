@@ -14,10 +14,11 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
-  const editProject = projects.find((item) => item.id === params.get('editProject'))
+  const activeProjects = useMemo(() => projects.filter((project) => !project.archived), [projects])
+  const editProject = projects.find((item) => item.id === params.get('editProject') && item.ownerId === currentUser?.id)
   const editTask = tasks.find((item) => item.id === params.get('editTask'))
   const detailTask = tasks.find((item) => item.id === params.get('task'))
-  const defaults = useMemo(() => ({ projectId: params.get('projectId') || projects[0]?.id || '', status: params.get('status') || 'todo', assigneeId: params.get('assigneeId') || currentUser?.id || '' }), [params, projects, currentUser])
+  const defaults = useMemo(() => ({ projectId: params.get('projectId') || activeProjects[0]?.id || '', status: params.get('status') || 'todo', assigneeId: params.get('assigneeId') || currentUser?.id || '' }), [params, activeProjects, currentUser])
   useEffect(() => {
     if (!mobileOpen) return undefined
     const onKeyDown = (event) => { if (event.key === 'Escape') setMobileOpen(false) }
@@ -27,10 +28,10 @@ export default function AppLayout() {
   const closeKeys = (...keys) => setParams((current) => { const next = new URLSearchParams(current); keys.forEach((key) => next.delete(key)); return next }, { replace: true })
   const setKey = (key, value) => setParams((current) => { const next = new URLSearchParams(current); next.set(key, value); return next })
   return <div className="app-shell">
-    <Sidebar projects={projects.filter((project) => !project.archived)} currentUser={currentUser} collapsed={collapsed} mobileOpen={mobileOpen} onToggle={() => setCollapsed((value) => !value)} onCloseMobile={() => setMobileOpen(false)} onCreateProject={() => setKey('create', 'project')} />
+    <Sidebar projects={activeProjects} currentUser={currentUser} collapsed={collapsed} mobileOpen={mobileOpen} onToggle={() => setCollapsed((value) => !value)} onCloseMobile={() => setMobileOpen(false)} onCreateProject={() => setKey('create', 'project')} />
     <div className="app-content"><MobileHeader onOpen={() => setMobileOpen(true)} /><main className="main-panel"><Outlet /></main></div>
     <ProjectModal open={params.get('create') === 'project' || Boolean(editProject)} project={editProject} users={users} currentUserId={currentUser?.id} onClose={() => closeKeys('create', 'editProject')} onSave={async (data) => { if (editProject) await actions.updateProject(editProject.id, data); else await actions.createProject(data); closeKeys('create', 'editProject') }} />
-    <TaskModal open={params.get('create') === 'task' || Boolean(editTask)} task={editTask} defaults={defaults} projects={projects.filter((project) => !project.archived)} users={users} onClose={() => closeKeys('create', 'editTask', 'projectId', 'status', 'assigneeId')} onSave={async (data) => { if (editTask) await actions.updateTask(editTask.id, data); else await actions.createTask({ ...data, creatorId: currentUser?.id || null }); closeKeys('create', 'editTask', 'projectId', 'status', 'assigneeId') }} />
+    <TaskModal open={(params.get('create') === 'task' && activeProjects.length > 0) || Boolean(editTask)} task={editTask} defaults={defaults} projects={activeProjects} users={users} onClose={() => closeKeys('create', 'editTask', 'projectId', 'status', 'assigneeId')} onSave={async (data) => { if (editTask) await actions.updateTask(editTask.id, data); else await actions.createTask(data); closeKeys('create', 'editTask', 'projectId', 'status', 'assigneeId') }} />
     <TaskDetailsDrawer open={Boolean(detailTask) && !editTask} task={detailTask} project={projects.find((item) => item.id === detailTask?.projectId)} assignee={users.find((item) => item.id === detailTask?.assigneeId)} onClose={() => closeKeys('task')} onEdit={() => setKey('editTask', detailTask.id)} onDelete={async () => { await actions.deleteTask(detailTask.id); closeKeys('task') }} onMove={(status) => actions.updateTaskStatus(detailTask.id, status)} onOpenProject={() => navigate(`/projects/${detailTask.projectId}/board?task=${detailTask.id}`)} />
     <ToastViewport />
   </div>

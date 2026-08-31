@@ -108,16 +108,24 @@ DELETE /api/tasks/:id
 
 Task list filters: `projectId`, `assigneeId`, `status`, `priority`, and `label`.
 
+Projects and tasks are scoped by project ownership/membership. Project lists exclude archives by default; pass `includeArchived=true` to include accessible archives. Inaccessible project/task entities return non-disclosing 404 responses. Task `projectId` is immutable after creation.
+
 The complete frozen contract is in `docs/ASSIGNMENT02_API_CONTRACT.md`.
 
 ## Postman
 
-Import `postman/CollabBoard_Assignment02.postman_collection.json`. The collection contains `baseUrl`, `token`, `userId`, `projectId`, and `taskId` variables. Login captures the JWT; create requests capture temporary entity IDs; cleanup requests remove the temporary task and project.
+Import `postman/CollabBoard_Assignment02.postman_collection.json`. From a clean server restart, the collection registers a temporary user, proves zero initial visibility, grants and revokes project membership, verifies non-disclosing 404 behavior, exercises the member-removal conflict, confirms immutable task projects, restores seeded assignments/membership, and preserves the registered directory.
 
 Run it from a terminal while the API is running:
 
 ```bash
 npx --yes newman run postman/CollabBoard_Assignment02.postman_collection.json
+```
+
+When exporting machine-readable evidence, sanitize the generated file before committing it:
+
+```bash
+node scripts/sanitize_newman_results.mjs docs/assignment02/screenshots/postman/newman-results.json
 ```
 
 ## Data and security boundaries
@@ -126,7 +134,11 @@ npx --yes newman run postman/CollabBoard_Assignment02.postman_collection.json
 - `JWT_SECRET` is required and is not committed.
 - CORS accepts only the configured Vite origin(s).
 - Users may patch only their own profile.
+- Projects are visible only to their owner and members.
+- Only project owners may edit project metadata/membership, archive, or delete.
+- The Team UI contains shared-project collaborators, while `/api/users` remains the registered-user directory.
 - Task assignees must belong to the selected project.
+- Task `projectId` cannot be changed after creation.
 - Removing a project member with assigned tasks returns `409 Conflict`.
 - Deleting a project cascades its in-memory tasks.
 - MongoDB, realtime, offline synchronization, Docker, and later milestones are intentionally excluded.

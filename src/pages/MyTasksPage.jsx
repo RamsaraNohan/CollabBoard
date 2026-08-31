@@ -20,6 +20,7 @@ export default function MyTasksPage() {
   const overdue = params.get('overdue') === 'true'
   const sort = params.get('sort') || 'due'
   const scope = params.get('scope') || 'mine'
+  const baseTasks = scope === 'all' ? tasks : tasks.filter((task) => task.assigneeId === currentUser?.id)
   const setFilter = (key, value) => setParams((current) => {
     const next = new URLSearchParams(current)
     if (value === 'all' || value === false || !value) next.delete(key)
@@ -27,10 +28,10 @@ export default function MyTasksPage() {
     return next
   })
   const list = useMemo(() => sortTasks(filterTasks(
-    scope === 'all' ? tasks : tasks.filter((task) => task.assigneeId === currentUser?.id),
+    baseTasks,
     { query, status, priority, projectId, label, overdue },
     users,
-  ), sort), [tasks, currentUser, scope, query, status, priority, projectId, label, overdue, users, sort])
+  ), sort), [baseTasks, query, status, priority, projectId, label, overdue, users, sort])
 
   return <div className="page-wrap">
     <header className="page-header"><div><p className="eyebrow">TASKS</p><h1>{scope === 'all' ? 'Workspace Tasks' : 'My Tasks'}</h1><p>{scope === 'all' ? 'All work across the Group 61 workspace.' : `Work assigned to ${currentUser?.name}, across every active project.`}</p></div></header>
@@ -56,6 +57,6 @@ export default function MyTasksPage() {
           <time className={state === 'overdue' ? 'overdue-text' : ''}>{formatDateLong(task.dueDate)}</time>
         </article>
       })}
-    </section> : <AsyncState state="empty" title="No matching tasks" message="Adjust your filters or assign a task to yourself." />}
+    </section> : <AsyncState state="empty" title={baseTasks.length ? 'No matching tasks' : 'No tasks assigned'} message={baseTasks.length ? 'Adjust your filters or assign a task to yourself.' : 'Tasks assigned to you across shared projects will appear here.'} />}
   </div>
 }

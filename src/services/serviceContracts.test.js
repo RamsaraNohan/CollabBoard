@@ -13,11 +13,11 @@ describe('asynchronous service contracts', () => {
     vi.restoreAllMocks()
   })
 
-  it('keeps every public mock facade Promise-compatible', () => {
-    expect(authService.getSession()).toBeInstanceOf(Promise)
-    expect(projectService.getAll()).toBeInstanceOf(Promise)
-    expect(taskService.getAll()).toBeInstanceOf(Promise)
-    expect(userService.getAll()).toBeInstanceOf(Promise)
+  it('keeps every public mock facade Promise-compatible', async () => {
+    window.localStorage.setItem('collabboard.session.v1', JSON.stringify({ userId: 'u1', token: 'mock-session-token', isAuthenticated: true, rememberMe: true }))
+    const calls = [authService.getSession(), projectService.getAll(), taskService.getAll(), userService.getAll()]
+    calls.forEach((call) => expect(call).toBeInstanceOf(Promise))
+    await Promise.all(calls)
   })
 
   it('stores a REST JWT and sends it as a Bearer token', async () => {
