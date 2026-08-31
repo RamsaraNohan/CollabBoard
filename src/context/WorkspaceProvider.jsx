@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useEffect, useMemo, useReducer } from 'react'
+import React, { createContext, useCallback, useEffect, useMemo, useReducer, useRef } from 'react'
 import { authService } from '../services/authService'
 import { projectService } from '../services/projectService'
 import { taskService } from '../services/taskService'
@@ -17,6 +17,7 @@ const initialState = {
 }
 
 function reducer(state, action) {
+  if (action.type === 'loading') return { ...state, status: 'loading', error: '' }
   if (action.type === 'loaded') return { ...state, ...action.payload, status: 'success', error: '' }
   if (action.type === 'error') return { ...state, status: 'error', error: action.error }
   if (action.type === 'session') return { ...state, session: action.session }
@@ -27,12 +28,15 @@ function reducer(state, action) {
 
 export default function WorkspaceProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState)
+  const refreshSequence = useRef(0)
 
   const refresh = useCallback(async () => {
+    const sequence = ++refreshSequence.current
+    dispatch({ type: 'loading' })
     try {
       let session = await authService.getSession()
       if (!session) {
-        dispatch({ type: 'loaded', payload: { users: [], projects: [], tasks: [], session: null } })
+        if (sequence === refreshSequence.current) dispatch({ type: 'loaded', payload: { users: [], projects: [], tasks: [], session: null } })
         return { users: [], projects: [], tasks: [] }
       }
       const [users, projects, tasks] = await Promise.all([
@@ -45,15 +49,23 @@ export default function WorkspaceProvider({ children }) {
         session = null
       }
       const workspace = { users, projects, tasks }
-      dispatch({ type: 'loaded', payload: { ...workspace, session } })
+      if (sequence === refreshSequence.current) dispatch({ type: 'loaded', payload: { ...workspace, session } })
       return workspace
     } catch (error) {
+      if (sequence !== refreshSequence.current) return null
+      if (error?.status === 401) {
+        dispatch({ type: 'loaded', payload: { users: [], projects: [], tasks: [], session: null } })
+        return null
+      }
       dispatch({ type: 'error', error: error.message || 'Unable to load CollabBoard.' })
-      throw error
+      return null
     }
   }, [])
 
-  useEffect(() => { refresh() }, [refresh])
+  useEffect(() => {
+    void refresh()
+    return () => { refreshSequence.current += 1 }
+  }, [refresh])
 
   useEffect(() => {
     const unauthorized = () => dispatch({ type: 'loaded', payload: { users: [], projects: [], tasks: [], session: null } })
